@@ -1,0 +1,119 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        section {
+            /* display: flex; */
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .email__wrapper {
+            background-color: #181818;
+            padding: 30px 50px;
+            width: 600px;
+        }
+
+        .email__wrapper .email__logo {
+            margin-bottom: 20px;
+        }
+
+        .email__wrapper .email__logo img {
+            width: 150px;
+        }
+
+        .email__wrapper .email__header {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #333333;
+        }
+
+        .email__wrapper .email__header h1 {
+            color: #dbdbdb;
+            margin: 0px;
+            font-size: 52px;
+            font-weight: 600;
+            padding-bottom: 30px;
+        }
+
+        .email__wrapper .email__header h1 span {
+            font-weight: bold;
+        }
+
+        .email__wrapper .email__header p {
+            color: #dbdbdb;
+            margin: 0px;
+            font-size: 18px;
+            font-weight: 500;
+            padding-bottom: 30px;
+            line-height: 2;
+        }
+
+        .email__wrapper .email__header p span {
+            font-weight: bold;
+            color: white;
+        }
+
+        .email__wrapper .email__header h5 {
+            color: #dbdbdb;
+            margin: 0px;
+            font-size: 22px;
+            font-weight: 600;
+            padding-bottom: 30px;
+            line-height: 2;
+        }
+
+        .email__wrapper .email__middle p {
+            color: #dbdbdb;
+            margin: 0px;
+            font-size: 18px;
+            font-weight: 500;
+            padding-bottom: 30px;
+            line-height: 2;
+        }
+
+        .email__wrapper .email__middle p span {
+            font-weight: bold;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <section>
+        <div class="email__wrapper">
+            <div class="email__logo">
+                <a href="http://live-legacy.com/" target="_blank" rel="no-referrer">
+                    <img src="cid:logoImage" alt="Live Legacy"></img>
+                </a>
+            </div>
+            <div class="email__header">
+                <h1>Dear <span>{{username}}</span>,</h1>
+                <h5>{{text}}</h5>
+                <p>We are sending this notice to ensure the privacy and security of your <span>Live Legacy</span>
+                    account. <span>If you authorized this change, no further action is necessary.</span></p>
+            </div>
+            <div class="email__middle">
+                <p><span>If you did not authorize this change, then please change your <span>Live Legacy</span>
+                        password</span>, and consider changing your email as well to ensure your account security.</p>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>
