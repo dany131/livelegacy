@@ -19,10 +19,10 @@ router.post("/upload-photo/:userId", auth, async (req, res) => {
                 res.status(400).json({ message: "Image can't be empty" });
                 return;
             }
-            if (!req.body.caption) {
-                res.status(400).json({ message: "Caption can't be empty" });
-                return;
-            }
+            // if (!req.body.caption) {
+            //     res.status(400).json({ message: "Caption can't be empty" });
+            //     return;
+            // }
             try {
                 let userImageID = "";
                 var matches = req.body.image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/), response = {};
@@ -103,10 +103,10 @@ router.post('/upload-video/:userId', auth, helper.videoUpload.single('video'), (
         res.status(400).json({ message: "File can't be empty" });
         return;
     }
-    if (!req.body.caption) {
-        res.status(400).json({ message: "Caption can't be empty" });
-        return;
-    }
+    // if (!req.body.caption) {
+    //     res.status(400).json({ message: "Caption can't be empty" });
+    //     return;
+    // }
     const video = new Video({
         userId: req.params.userId,
         videoName: req.file.filename,

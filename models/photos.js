@@ -11,7 +11,7 @@ const PhotoSchema = new mongoose.Schema({
     },
     caption: {
         type: String,
-        required: true
+        // required: true
     },
     status: {
         type: String,
