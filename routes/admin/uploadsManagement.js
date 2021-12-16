@@ -74,114 +74,114 @@ router.post("/delete-status/:statusId", auth, async (req, res) => {
 });
 
 // Update post status (Approved, Declined)
-router.post("/update-status/:postId", auth, async (req, res) => {
-    try {
-        if (!req.body.status) {
-            res.status(400).json({ message: "Fields are required" });
-            return;
-        }
-        let post = {};
-        let isPhoto = true;
-        const photo = await Photo.findById(req.params.postId);
-        post = photo;
-        if (!photo) {
-            isPhoto = false;
-            const video = await Video.findById(req.params.postId);
-            post = video;
-            if (!video) {
-                res.status(400).json({ message: "Post not found" });
-                return;
-            }
-        }
-        if (post.status !== "Pending") {
-            res.status(400).json({ message: "Status already updated" });
-            return;
-        }
-        if (req.body.status === "Approved") {
-            if (isPhoto) {
-                Photo.findByIdAndUpdate(req.params.postId, { status: req.body.status },
-                    function (err, docs) {
-                        if (err) {
-                            res.status(400).json({ message: err.message });
-                            return;
-                        }
-                        else {
-                            res.status(200).json({ message: `Post ${req.body.status} Successfully` });
-                            return;
-                        }
-                    });
-            } else {
-                Video.findByIdAndUpdate(req.params.postId, { status: req.body.status },
-                    function (err, docs) {
-                        if (err) {
-                            res.status(400).json({ message: err.message });
-                            return;
-                        }
-                        else {
-                            res.status(200).json({ message: `Post ${req.body.status} Successfully` });
-                            return;
-                        }
-                    });
-            }
-        } else if (req.body.status === "Declined") {
-            if (isPhoto) {
-                await Photo.findByIdAndRemove(req.params.postId);
-                fs.unlink(`${process.env.IMAGE_PATH}${post.imageName}`, (error) => {
-                    // console.log(error);
-                });
-                res.status(200).json({ message: `Post ${req.body.status} Successfully` });
-                return;
-            } else {
-                await Video.findByIdAndRemove(req.params.postId);
-                fs.unlink(`${process.env.VIDEO_PATH}${post.videoName}`, (error) => {
-                    // console.log(error);
-                });
-                res.status(200).json({ message: `Post ${req.body.status} Successfully` });
-                return;
-            }
-        }
-    } catch (error) {
-        res.status(500).json({ message: "Something went wrong" });
-        return;
-    }
-});
+// router.post("/update-status/:postId", auth, async (req, res) => {
+//     try {
+//         if (!req.body.status) {
+//             res.status(400).json({ message: "Fields are required" });
+//             return;
+//         }
+//         let post = {};
+//         let isPhoto = true;
+//         const photo = await Photo.findById(req.params.postId);
+//         post = photo;
+//         if (!photo) {
+//             isPhoto = false;
+//             const video = await Video.findById(req.params.postId);
+//             post = video;
+//             if (!video) {
+//                 res.status(400).json({ message: "Post not found" });
+//                 return;
+//             }
+//         }
+//         if (post.status !== "Pending") {
+//             res.status(400).json({ message: "Status already updated" });
+//             return;
+//         }
+//         if (req.body.status === "Approved") {
+//             if (isPhoto) {
+//                 Photo.findByIdAndUpdate(req.params.postId, { status: req.body.status },
+//                     function (err, docs) {
+//                         if (err) {
+//                             res.status(400).json({ message: err.message });
+//                             return;
+//                         }
+//                         else {
+//                             res.status(200).json({ message: `Post ${req.body.status} Successfully` });
+//                             return;
+//                         }
+//                     });
+//             } else {
+//                 Video.findByIdAndUpdate(req.params.postId, { status: req.body.status },
+//                     function (err, docs) {
+//                         if (err) {
+//                             res.status(400).json({ message: err.message });
+//                             return;
+//                         }
+//                         else {
+//                             res.status(200).json({ message: `Post ${req.body.status} Successfully` });
+//                             return;
+//                         }
+//                     });
+//             }
+//         } else if (req.body.status === "Declined") {
+//             if (isPhoto) {
+//                 await Photo.findByIdAndRemove(req.params.postId);
+//                 fs.unlink(`${process.env.IMAGE_PATH}${post.imageName}`, (error) => {
+//                     // console.log(error);
+//                 });
+//                 res.status(200).json({ message: `Post ${req.body.status} Successfully` });
+//                 return;
+//             } else {
+//                 await Video.findByIdAndRemove(req.params.postId);
+//                 fs.unlink(`${process.env.VIDEO_PATH}${post.videoName}`, (error) => {
+//                     // console.log(error);
+//                 });
+//                 res.status(200).json({ message: `Post ${req.body.status} Successfully` });
+//                 return;
+//             }
+//         }
+//     } catch (error) {
+//         res.status(500).json({ message: "Something went wrong" });
+//         return;
+//     }
+// });
 
 // Update status information (Approved, Declined)
-router.post("/update-status-information/:statusId", auth, async (req, res) => {
-    try {
-        if (!req.body.status) {
-            res.status(400).json({ message: "Fields are required" });
-            return;
-        }
-        const post = await Status.findById(req.params.statusId);
-        if (post.status !== "Pending") {
-            res.status(400).json({ message: "Status already updated" });
-            return;
-        }
-        if (req.body.status === "Approved") {
-            Status.findByIdAndUpdate(req.params.statusId, { status: req.body.status },
-                function (err, docs) {
-                    if (err) {
-                        res.status(400).json({ message: err.message });
-                        return;
-                    }
-                    else {
-                        res.status(200).json({ message: `Post ${req.body.status} Successfully` });
-                        return;
-                    }
-                });
-        } else if (req.body.status === "Declined") {
-            await Status.findByIdAndRemove(req.params.statusId);
-            res.status(200).json({ message: `Post ${req.body.status} Successfully` });
-            return;
-        } else {
-            res.status(400).json({ message: "Status must be Approved or Declined" });
-            return;
-        }
-    } catch (error) {
-        res.status(500).json({ message: "Something went wrong" });
-        return;
-    }
-});
+// router.post("/update-status-information/:statusId", auth, async (req, res) => {
+//     try {
+//         if (!req.body.status) {
+//             res.status(400).json({ message: "Fields are required" });
+//             return;
+//         }
+//         const post = await Status.findById(req.params.statusId);
+//         if (post.status !== "Pending") {
+//             res.status(400).json({ message: "Status already updated" });
+//             return;
+//         }
+//         if (req.body.status === "Approved") {
+//             Status.findByIdAndUpdate(req.params.statusId, { status: req.body.status },
+//                 function (err, docs) {
+//                     if (err) {
+//                         res.status(400).json({ message: err.message });
+//                         return;
+//                     }
+//                     else {
+//                         res.status(200).json({ message: `Post ${req.body.status} Successfully` });
+//                         return;
+//                     }
+//                 });
+//         } else if (req.body.status === "Declined") {
+//             await Status.findByIdAndRemove(req.params.statusId);
+//             res.status(200).json({ message: `Post ${req.body.status} Successfully` });
+//             return;
+//         } else {
+//             res.status(400).json({ message: "Status must be Approved or Declined" });
+//             return;
+//         }
+//     } catch (error) {
+//         res.status(500).json({ message: "Something went wrong" });
+//         return;
+//     }
+// });
 
 module.exports = router;

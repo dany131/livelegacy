@@ -13,9 +13,9 @@ const VideoSchema = new mongoose.Schema({
         type: String,
         // required: true
     },
-    status: {
-        type: String,
-        required: true
-    }
+    // status: {
+    //     type: String,
+    //     required: true
+    // }
 }, { timestamps: true });
 module.exports = mongoose.model('video', VideoSchema);
