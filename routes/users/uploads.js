@@ -76,31 +76,29 @@ router.post("/upload-photo/:userId", auth, async (req, res) => {
 });
 
 // Delete pictures
-router.post("/delete-photo/:userId", auth, async (req, res) => {
-  await User.findById(req.params.userId)
-    .then(async (user) => {
-      if (user) {
-        if (!req.body.imageName) {
-          res.status(400).json({ message: "Fields are required" });
-          return;
-        }
+router.post("/delete-photo/:postId", auth, async (req, res) => {
+  await Photo.findById(req.params.postId)
+    .then(async (photo) => {
+      if (photo) {
+        // if (!req.body.imageName) {
+        //   res.status(400).json({ message: "Fields are required" });
+        //   return;
+        // }
+
         // Check if image exists
-        const findImage = await Photo.findOne({
-          userId: req.params.userId,
-          imageName: req.body.imageName,
-        });
-        if (!findImage) {
-          res.status(400).json({ message: "Image not found" });
-          return;
-        }
+        // const findImage = await Photo.findOne({
+        //   userId: req.params.userId,
+        //   imageName: req.body.imageName,
+        // });
+        // if (!findImage) {
+        //   res.status(400).json({ message: "Image not found" });
+        //   return;
+        // }
         try {
-          await Photo.findByIdAndRemove(findImage._doc._id);
-          fs.unlink(
-            `${process.env.IMAGE_PATH}${req.body.imageName}`,
-            (error) => {
-              // console.log(error);
-            }
-          );
+          await Photo.findByIdAndRemove(req.params.postId);
+          fs.unlink(`${process.env.IMAGE_PATH}${photo.imageName}`, (error) => {
+            // console.log(error);
+          });
           // await Comment.deleteMany({ postId: findImage._doc._id });
           res.status(200).json({ message: "Photo deleted successfully" });
           return;
@@ -108,8 +106,10 @@ router.post("/delete-photo/:userId", auth, async (req, res) => {
           res.status(400).json({ message: error.message });
           return;
         }
+      } else {
+        res.status(404).json({ message: "Post not found" });
+        return;
       }
-      res.status(404).json({ message: "User was not found" });
     })
     .catch((error) => {
       res.status(500).json({ message: "Something went wrong" });
@@ -146,31 +146,28 @@ router.post(
 );
 
 // Delete videos
-router.post("/delete-video/:userId", auth, async (req, res) => {
-  await User.findById(req.params.userId)
-    .then(async (user) => {
-      if (user) {
-        if (!req.body.videoName) {
-          res.status(400).json({ message: "Fields are required" });
-          return;
-        }
+router.post("/delete-video/:postId", auth, async (req, res) => {
+  await Video.findById(req.params.postId)
+    .then(async (video) => {
+      if (video) {
+        // if (!req.body.videoName) {
+        //   res.status(400).json({ message: "Fields are required" });
+        //   return;
+        // }
         // Check if image exists
-        const findVideo = await Video.findOne({
-          userId: req.params.userId,
-          videoName: req.body.videoName,
-        });
-        if (!findVideo) {
-          res.status(400).json({ message: "Video not found" });
-          return;
-        }
+        // const findVideo = await Video.findOne({
+        //   userId: req.params.userId,
+        //   videoName: req.body.videoName,
+        // });
+        // if (!findVideo) {
+        //   res.status(400).json({ message: "Video not found" });
+        //   return;
+        // }
         try {
-          await Video.findByIdAndRemove(findVideo._doc._id);
-          fs.unlink(
-            `${process.env.VIDEO_PATH}${req.body.videoName}`,
-            (error) => {
-              // console.log(error);
-            }
-          );
+          await Video.findByIdAndRemove(req.params.postId);
+          fs.unlink(`${process.env.VIDEO_PATH}${video.videoName}`, (error) => {
+            // console.log(error);
+          });
           // await Comment.deleteMany({ postId: req.params.videoId });
           res.status(200).json({ message: "Video deleted successfully" });
           return;
@@ -178,8 +175,10 @@ router.post("/delete-video/:userId", auth, async (req, res) => {
           res.status(400).json({ message: error.message });
           return;
         }
+      } else {
+        res.status(404).json({ message: "Video not found" });
+        return;
       }
-      res.status(404).json({ message: "User was not found" });
     })
     .catch((error) => {
       res.status(500).json({ message: "Something went wrong" });
