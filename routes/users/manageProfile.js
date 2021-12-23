@@ -41,10 +41,10 @@ router.post("/update-gallery-information/:userId", auth, async (req, res) => {
     .then(async (user) => {
       if (user) {
         const { galleryPage, galleryDescription } = req.body;
-        if (!galleryPage || !galleryDescription) {
-          res.status(400).json({ message: "Fields are required" });
-          return;
-        }
+        // if (!galleryPage || !galleryDescription) {
+        //   res.status(400).json({ message: "Fields are required" });
+        //   return;
+        // }
         if (galleryPage.length > 100) {
           res
             .status(400)
