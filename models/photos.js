@@ -5,10 +5,10 @@ const PhotoSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    imageName: {
-        type: String,
-        required: true
-    },
+    // imageName: {
+    //     type: String,
+    //     required: true
+    // },
     caption: {
         type: String,
         // required: true

@@ -9,6 +9,7 @@ const Status = require("../../models/status");
 // const Comment = require("../../models/comments");
 const helper = require("../../utils/Helper");
 const bcrypt = require("bcrypt");
+const PostMedia = require("../../models/postMedia");
 
 // Create user
 router.post("/create-user", auth, async (req, res) => {
@@ -84,25 +85,36 @@ router.post("/delete-user/:userId", auth, async (req, res) => {
     // Delete users all photos
     const photos = await Photo.find({ userId: req.params.userId });
     await Photo.deleteMany({ userId: req.params.userId });
-    for (let i = 0; i < photos.length; i++) {
-      fs.unlink(
-        `${process.env.IMAGE_PATH}${photos[i]._doc.imageName}`,
-        (error) => {
-          // console.log(error);
+    // Delete photo data
+    if (photos.length > 0) {
+      for (let i = 0; i < photos.length; i++) {
+        const photoData = await PostMedia.find({ postId: photos[i]._doc._id });
+        await PostMedia.deleteMany({ postId: photos[i]._doc._id });
+        for (let j = 0; j < photoData.length; j++) {
+          fs.unlink(`${process.env.IMAGE_PATH}${photoData[j]._doc.mediaName}`, (error) => { });
         }
-      );
+      }
     }
     // Delete users all videos
     const videos = await Video.find({ userId: req.params.userId });
     await Video.deleteMany({ userId: req.params.userId });
-    for (let i = 0; i < videos.length; i++) {
-      fs.unlink(
-        `${process.env.VIDEO_PATH}${videos[i]._doc.videoName}`,
-        (error) => {
-          // console.log(error);
+    if (videos.length > 0) {
+      for (let i = 0; i < videos.length; i++) {
+        const videoData = await PostMedia.find({ postId: videos[i]._doc._id });
+        await PostMedia.deleteMany({ postId: videos[i]._doc._id });
+        for (let j = 0; j < videoData.length; j++) {
+          fs.unlink(`${process.env.VIDEO_PATH}${videoData[j]._doc.mediaName}`, (error) => { });
         }
-      );
+      }
     }
+    // for (let i = 0; i < videos.length; i++) {
+    //   fs.unlink(
+    //     `${process.env.VIDEO_PATH}${videos[i]._doc.videoName}`,
+    //     (error) => {
+    //       // console.log(error);
+    //     }
+    //   );
+    // }
     // Delete users all status
     await Status.deleteMany({ userId: req.params.userId });
     // Delete users all comments

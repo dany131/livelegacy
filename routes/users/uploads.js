@@ -9,6 +9,7 @@ const mime = require("mime");
 const Photo = require("../../models/photos");
 const Video = require("../../models/videos");
 const Status = require("../../models/status");
+const PostMedia = require("../../models/postMedia");
 // const Comment = require("../../models/comments");
 
 // Upload pictures
@@ -16,64 +17,139 @@ router.post("/upload-photo/:userId", auth, async (req, res) => {
   await User.findById(req.params.userId)
     .then(async (user) => {
       if (user) {
-        if (!req.body.image) {
-          res.status(400).json({ message: "Image can't be empty" });
+        if (req.body.caption.length > 5000) {
+          res.status(400).json({ message: "Caption should not be more than 5000 characters" });
           return;
         }
-        if (req.body.caption.length > 5000) {
-          res.status(400).json({
-            message: "Caption should not be more than 5000 characters",
-          });
+        if (req.body.images.length < 1) {
+          res.status(400).json({ message: "Fields are required" });
+          return;
+        }
+        if (req.body.images.length > 5) {
+          res.status(400).json({ message: "Maximum 5 images can be uploaded" });
           return;
         }
         try {
-          let userImageID = "";
-          var matches = req.body.image.match(
-              /^data:([A-Za-z-+/]+);base64,(.+)$/
-            ),
-            response = {};
-          if (matches.length !== 3) {
-            res.status(400).json({ message: "Invalid input string for image" });
-            return;
+          // Upload multiple images
+          let allImages = [];
+          for (let i = 0; i < req.body.images.length; i++) {
+            var matches = req.body.images[i].match(/^data:([A-Za-z-+/]+);base64,(.+)$/), response = {};
+            if (matches.length !== 3) {
+              return new Error('Invalid input string');
+            }
+            response.type = matches[1];
+            response.data = new Buffer.from(matches[2], 'base64');
+            let decodedImg = response;
+            let imageBuffer = decodedImg.data;
+            let type = decodedImg.type;
+            let extension = mime.extension(type);
+            let fileName = `${nanoid()}.` + extension;
+            allImages.push(fileName);
+            try {
+              fs.writeFileSync(process.env.IMAGE_PATH + fileName, imageBuffer, 'utf8');
+              // return res.send({ "status": "success" });
+            } catch (e) {
+              next(e);
+            }
           }
-          response.type = matches[1];
-          response.data = new Buffer.from(matches[2], "base64");
-          let decodedImg = response;
-          let imageBuffer = decodedImg.data;
-          let type = decodedImg.type;
-          let extension = mime.extension(type);
-          let fileName = `${nanoid()}.` + extension;
-          userImageID = fileName;
-          try {
-            fs.writeFileSync(
-              process.env.IMAGE_PATH + fileName,
-              imageBuffer,
-              "utf8"
-            );
-            const photo = new Photo({
-              userId: req.params.userId,
-              imageName: userImageID,
-              caption: req.body.caption,
-              // status: "Pending"
-            }).save();
-            res.status(200).json({ message: "Photo uploaded successfully" });
+          const photo = new Photo({
+            userId: req.params.userId,
+            // imageName: userImageID,
+            caption: req.body.caption,
+            // status: "Pending"
+          }).save(async (error, documentSaved, numberOfRowsAffected) => {
+            if (documentSaved) {
+              for (let i = 0; i < allImages.length; i++) {
+                const media = new PostMedia({
+                  postId: documentSaved._id,
+                  mediaName: allImages[i],
+                }).save();
+              }
+            } else {
+              res.status(400).json({ message: "There was some problem at this time please try again later" });
+              return;
+            }
+            res.status(200).json({ message: "Photo(s) uploaded successfully" });
             return;
-          } catch (e) {
-            res.status(400).json({ message: e.message });
-            return;
-          }
+          });
         } catch (error) {
           res.status(400).json({ message: error.message });
           return;
         }
+      } else {
+        res.status(404).json({ message: "User was not found" });
+        return;
       }
-      res.status(404).json({ message: "User was not found" });
     })
     .catch((error) => {
       console.log(error);
       res.status(500).json({ message: "Something went wrong" });
     });
 });
+
+// Previous work for single upload 
+// router.post("/upload-photo/:userId", auth, async (req, res) => {
+//   await User.findById(req.params.userId)
+//     .then(async (user) => {
+//       if (user) {
+//         if (!req.body.image) {
+//           res.status(400).json({ message: "Image can't be empty" });
+//           return;
+//         }
+//         if (req.body.caption.length > 5000) {
+//           res.status(400).json({
+//             message: "Caption should not be more than 5000 characters",
+//           });
+//           return;
+//         }
+//         try {
+//           let userImageID = "";
+//           var matches = req.body.image.match(
+//               /^data:([A-Za-z-+/]+);base64,(.+)$/
+//             ),
+//             response = {};
+//           if (matches.length !== 3) {
+//             res.status(400).json({ message: "Invalid input string for image" });
+//             return;
+//           }
+//           response.type = matches[1];
+//           response.data = new Buffer.from(matches[2], "base64");
+//           let decodedImg = response;
+//           let imageBuffer = decodedImg.data;
+//           let type = decodedImg.type;
+//           let extension = mime.extension(type);
+//           let fileName = `${nanoid()}.` + extension;
+//           userImageID = fileName;
+//           try {
+//             fs.writeFileSync(
+//               process.env.IMAGE_PATH + fileName,
+//               imageBuffer,
+//               "utf8"
+//             );
+//             const photo = new Photo({
+//               userId: req.params.userId,
+//               imageName: userImageID,
+//               caption: req.body.caption,
+//               // status: "Pending"
+//             }).save();
+//             res.status(200).json({ message: "Photo uploaded successfully" });
+//             return;
+//           } catch (e) {
+//             res.status(400).json({ message: e.message });
+//             return;
+//           }
+//         } catch (error) {
+//           res.status(400).json({ message: error.message });
+//           return;
+//         }
+//       }
+//       res.status(404).json({ message: "User was not found" });
+//     })
+//     .catch((error) => {
+//       console.log(error);
+//       res.status(500).json({ message: "Something went wrong" });
+//     });
+// });
 
 // Delete pictures
 router.post("/delete-photo/:postId", auth, async (req, res) => {
@@ -96,11 +172,19 @@ router.post("/delete-photo/:postId", auth, async (req, res) => {
         // }
         try {
           await Photo.findByIdAndRemove(req.params.postId);
-          fs.unlink(`${process.env.IMAGE_PATH}${photo.imageName}`, (error) => {
-            // console.log(error);
-          });
+          // Find photo media 
+          const photoMedia = await PostMedia.find({ postId: req.params.postId });
+          if (photoMedia.length > 0) {
+            for (let i = 0; i < photoMedia.length; i++) {
+              fs.unlink(`${process.env.IMAGE_PATH}${photoMedia[i]._doc.mediaName}`, (error) => {
+                // console.log(error);
+              });
+              // Delete image reference from database
+              await PostMedia.deleteMany({ postId: req.params.postId });
+            }
+          }
           // await Comment.deleteMany({ postId: findImage._doc._id });
-          res.status(200).json({ message: "Photo deleted successfully" });
+          res.status(200).json({ message: "Photo(s) deleted successfully" });
           return;
         } catch (error) {
           res.status(400).json({ message: error.message });
@@ -117,29 +201,37 @@ router.post("/delete-photo/:postId", auth, async (req, res) => {
 });
 
 // Upload videos
-router.post(
-  "/upload-video/:userId",
-  auth,
-  helper.videoUpload.single("video"),
-  (req, res) => {
-    if (!req.file) {
-      res.status(400).json({ message: "File can't be empty" });
+router.post("/upload-video/:userId", auth, helper.videoUpload.array("videos", 5), (req, res) => {
+  if (!req.files) {
+    res.status(400).json({ message: "File can't be empty" });
+    return;
+  }
+  if (req.body.caption.length > 5000) {
+    res.status(400).json({ message: "Caption should not be more than 5000 characters" });
+    return;
+  }
+  const video = new Video({
+    userId: req.params.userId,
+    // videoName: req.file.filename,
+    caption: req.body.caption,
+    // status: "Pending"
+  }).save(async (error, documentSaved, numberOfRowsAffected) => {
+    if (documentSaved) {
+      for (let i = 0; i < req.files.length; i++) {
+        PostMedia({
+          postId: documentSaved._id,
+          mediaName: req.files[i].filename,
+        }).save();
+      }
+    } else {
+      res.status(400).json({ message: "There was some problem at this time please try again later" });
       return;
     }
-    if (req.body.caption.length > 5000) {
-      res
-        .status(400)
-        .json({ message: "Caption should not be more than 5000 characters" });
-      return;
-    }
-    const video = new Video({
-      userId: req.params.userId,
-      videoName: req.file.filename,
-      caption: req.body.caption,
-      // status: "Pending"
-    }).save();
-    res.status(200).json({ message: "Video uploaded successfully" });
-  },
+    res.status(200).json({ message: "Video(s) uploaded successfully" });
+    return;
+  });
+  // console.log(req.files)
+},
   (error, req, res, next) => {
     res.status(400).send({ message: error.message });
   }
@@ -165,9 +257,15 @@ router.post("/delete-video/:postId", auth, async (req, res) => {
         // }
         try {
           await Video.findByIdAndRemove(req.params.postId);
-          fs.unlink(`${process.env.VIDEO_PATH}${video.videoName}`, (error) => {
-            // console.log(error);
-          });
+          const photoMedia = await PostMedia.find({ postId: req.params.postId });
+          if (photoMedia.length > 0) {
+            for (let i = 0; i < photoMedia.length; i++) {
+              fs.unlink(`${process.env.VIDEO_PATH}${photoMedia[i]._doc.mediaName}`, (error) => {
+              });
+              // Delete image reference from database
+              await PostMedia.deleteMany({ postId: req.params.postId });
+            }
+          }
           // await Comment.deleteMany({ postId: req.params.videoId });
           res.status(200).json({ message: "Video deleted successfully" });
           return;
@@ -240,9 +338,37 @@ router.get("/all-user-upload/:userId", async (req, res) => {
         const photos = await Photo.find({ userId: req.params.userId });
         const videos = await Video.find({ userId: req.params.userId });
         const status = await Status.find({ userId: req.params.userId });
+        let photoData = [];
+        let videoData = [];
+        // Find all photos related to photo post
+        if (photos.length > 0) {
+          for (let i = 0; i < photos.length; i++) {
+            const currentPostPhotos = await PostMedia.find({ postId: photos[i]._doc._id });
+            if (currentPostPhotos.length > 0) {
+              let data = {
+                photo: photos[i]._doc,
+                media: currentPostPhotos
+              }
+              photoData.push(data);
+            }
+          }
+        }
+        // Find all videos related to video post
+        if (videos.length > 0) {
+          for (let i = 0; i < videos.length; i++) {
+            const currentPostVideos = await PostMedia.find({ postId: videos[i]._doc._id });
+            if (currentPostVideos.length > 0) {
+              let data = {
+                video: videos[i]._doc,
+                media: currentPostVideos
+              }
+              videoData.push(data);
+            }
+          }
+        }
         res.status(200).json({
           message: "User's all uploads",
-          data: { photos: photos, videos: videos, status: status },
+          data: { photos: photoData, videos: videoData, status: status },
         });
         return;
       }
@@ -264,8 +390,18 @@ router.get("/all-photos", async (req, res) => {
           user.isApproved = undefined;
           user.verificationCode = undefined;
           user.password = undefined;
+          // Find all photos related to photo post
+          // let photoData = [];
+          const currentPostPhotos = await PostMedia.find({ postId: photos[i]._doc._id });
+          if (currentPostPhotos.length > 0) {
+            var photoMedia = {
+              photoData: photos[i]._doc,
+              photoMedia: currentPostPhotos
+            }
+            // photoData.push(photoMedia);
+          }
           let data = {
-            photo: photos[i],
+            photo: photoMedia,
             user: user,
           };
           allData.push(data);
@@ -291,8 +427,15 @@ router.get("/all-videos", async (req, res) => {
           user.isApproved = undefined;
           user.verificationCode = undefined;
           user.password = undefined;
+          const currentPostVideos = await PostMedia.find({ postId: videos[i]._doc._id });
+          if (currentPostVideos.length > 0) {
+            var videoMedia = {
+              videoData: videos[i]._doc,
+              videoMedia: currentPostVideos
+            }
+          }
           let data = {
-            video: videos[i],
+            video: videoMedia,
             user: user,
           };
           allData.push(data);
@@ -302,7 +445,8 @@ router.get("/all-videos", async (req, res) => {
       }
       res.status(404).json({ message: "No videos found", data: null });
     })
-    .catch(() => {
+    .catch((error) => {
+      console.log(error)
       res.status(500).json({ message: "Something went wrong", data: null });
     });
 });
@@ -430,9 +574,47 @@ router.post("/update-status/:postId", auth, async (req, res) => {
       }
     })
     .catch((error) => {
-      console.log(error);
+      // console.log(error);
       res.status(500).json({ message: "Something went wrong" });
     });
+});
+
+// Delete single photo from photo post
+router.post("/delete-post-photo/:postMediaId", auth, async (req, res) => {
+  await PostMedia.findById(req.params.postMediaId).then(async (photo) => {
+    if (photo) {
+      await PostMedia.findByIdAndRemove(req.params.postMediaId);
+      // Delete from storage
+      fs.unlink(`${process.env.IMAGE_PATH}${photo.mediaName}`, (error) => { });
+      res.status(200).json({ message: "Photo deleted successfully" });
+      return;
+    } else {
+      res.status(404).json({ message: "Photo not found" });
+      return;
+    }
+  }).catch((error) => {
+    res.status(500).json({ message: "Something went wrong" });
+    return;
+  })
+});
+
+// Delete single video from video post
+router.post("/delete-post-video/:postMediaId", auth, async (req, res) => {
+  await PostMedia.findById(req.params.postMediaId).then(async (video) => {
+    if (video) {
+      await PostMedia.findByIdAndRemove(req.params.postMediaId);
+      // Delete from storage
+      fs.unlink(`${process.env.VIDEO_PATH}${video.mediaName}`, (error) => { });
+      res.status(200).json({ message: "Video deleted successfully" });
+      return;
+    } else {
+      res.status(404).json({ message: "Video not found" });
+      return;
+    }
+  }).catch((error) => {
+    res.status(500).json({ message: "Something went wrong" });
+    return;
+  })
 });
 
 // // Add comment
