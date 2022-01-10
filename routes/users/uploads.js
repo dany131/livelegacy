@@ -424,9 +424,11 @@ router.get("/all-videos", async (req, res) => {
         let allData = [];
         for (let i = 0; i < videos.length; i++) {
           const user = await User.findById(videos[i]._doc.userId);
-          user.isApproved = undefined;
-          user.verificationCode = undefined;
-          user.password = undefined;
+          if (user) {
+            // user.isApproved = undefined;
+            user.verificationCode = undefined;
+            user.password = undefined;
+          }
           const currentPostVideos = await PostMedia.find({ postId: videos[i]._doc._id });
           if (currentPostVideos.length > 0) {
             var videoMedia = {
@@ -616,6 +618,55 @@ router.post("/delete-post-video/:postMediaId", auth, async (req, res) => {
     return;
   })
 });
+
+// Get photo post by id 
+router.get("/photo-post/:postId", async (req, res) => {
+  await Photo.findById(req.params.postId).then(async (photo) => {
+    if (photo) {
+      const postMedia = await PostMedia.find({ postId: req.params.postId });
+      let data = {
+        photo: photo,
+        media: postMedia
+      }
+      res.status(200).json({ message: "Success", data: data });
+      return;
+    }
+    else {
+      res.status(404).json({ message: "Photo not found", data: null });
+      return;
+    }
+  }).catch((error) => {
+    console.log(error)
+    res.status(500).json({ message: "Something went wrong", data: null });
+  });
+});
+
+// Get video post by id 
+router.get("/video-post/:postId", async (req, res) => {
+  await Video.findById(req.params.postId).then(async (video) => {
+    if (video) {
+      const postMedia = await PostMedia.find({ postId: req.params.postId });
+      let data = {
+        video: video,
+        media: postMedia
+      }
+      res.status(200).json({ message: "Success", data: data });
+      return;
+    }
+    else {
+      res.status(404).json({ message: "Video not found", data: null });
+      return;
+    }
+  }).catch((error) => {
+    console.log(error)
+    res.status(500).json({ message: "Something went wrong", data: null });
+  });
+});
+
+
+
+
+
 
 // // Add comment
 // router.post("/add-comment/:userId/:postId", auth, async (req, res) => {
