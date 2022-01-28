@@ -25,8 +25,8 @@ router.post("/upload-photo/:userId", auth, async (req, res) => {
           res.status(400).json({ message: "Fields are required" });
           return;
         }
-        if (req.body.images.length > 5) {
-          res.status(400).json({ message: "Maximum 5 images can be uploaded" });
+        if (req.body.images.length > 10) {
+          res.status(400).json({ message: "Maximum 10 images can be uploaded" });
           return;
         }
         try {
@@ -201,7 +201,7 @@ router.post("/delete-photo/:postId", auth, async (req, res) => {
 });
 
 // Upload videos
-router.post("/upload-video/:userId", auth, helper.videoUpload.array("videos", 5), (req, res) => {
+router.post("/upload-video/:userId", auth, helper.videoUpload.array("videos", 10), (req, res) => {
   if (!req.files) {
     res.status(400).json({ message: "File can't be empty" });
     return;
