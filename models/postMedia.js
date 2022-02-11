@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// Post Media Schema
+// Post Media Schema - Deprecated
 const PostMediaSchema = new mongoose.Schema({
     postId: {
         type: String,
